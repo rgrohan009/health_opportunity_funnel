@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Health Opportunities Funnel Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F4F3EF;
+    --surface: #FFFFFF;
+    --surface2: #F8F7F4;
+    --border: #E2E0DA;
+    --border2: #D0CEC6;
+    --text-primary: #1A1915;
+    --text-secondary: #6B6860;
+    --text-muted: #9B9890;
+    --vrm-1: #3B2F8A;
+    --vrm-2: #5C4EC4;
+    --vrm-3: #8B7EE8;
+    --vrm-4: #C5BEFD;
+    --vrm-light: #EEF0FF;
+    --nv-1: #0D5C41;
+    --nv-2: #1A8A5F;
+    --nv-3: #4DB88A;
+    --nv-4: #A8E6CA;
+    --nv-light: #E8F7F0;
+    --warn: #92400E;
+    --warn-bg: #FEF3C7;
+    --warn-border: #F59E0B;
+    --success: #065F46;
+    --success-bg: #D1FAE5;
+    --accent: #E85D30;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+  }
+  .header-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+  .period-badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ── TABS ── */
+  .tab-bar {
+    display: flex;
+    gap: 0;
+    padding: 0 28px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .tab-btn {
+    padding: 12px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--text-secondary); }
+  .tab-btn.active { color: var(--text-primary); border-bottom-color: var(--text-primary); }
+
+  /* ── MAIN LAYOUT ── */
+  .main {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 0;
+    height: calc(100vh - 97px);
+    overflow: hidden;
+  }
+
+  /* ── LEFT PANEL ── */
+  .left-panel {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .left-panel::-webkit-scrollbar { width: 4px; }
+  .left-panel::-webkit-scrollbar-track { background: transparent; }
+  .left-panel::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 12px 14px 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+  .card-body { padding: 14px; }
+
+  /* ── TOP OF FUNNEL CARD ── */
+  .tof-info {
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    margin-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .tof-info-label { font-size: 12px; color: var(--text-secondary); }
+  .tof-info-val {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ── SLIDER ROW ── */
+  .slider-row { margin-bottom: 14px; }
+  .slider-row:last-child { margin-bottom: 0; }
+  .slider-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .slider-label span { font-size: 13px; color: var(--text-secondary); }
+  .slider-label strong {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: 'DM Mono', monospace;
+  }
+  input[type=range] {
+    width: 100%;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--border2);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--text-primary);
+    border: 2px solid var(--surface);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: transform 0.12s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+
+  /* ── KEY VALUES ── */
+  .kv-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .kv-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .kv-row:first-child { padding-top: 0; }
+  .kv-label { font-size: 13px; color: var(--text-secondary); }
+  input[type=number] {
+    width: 90px;
+    padding: 5px 8px;
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    background: var(--surface2);
+    color: var(--text-primary);
+    text-align: right;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input[type=number]:focus { border-color: var(--text-primary); }
+
+  /* ── STEP BLOCKS ── */
+  .step-block {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  .step-block:last-child { margin-bottom: 0; }
+  .step-block.lock-step { border-color: var(--warn-border); }
+  .step-header {
+    background: var(--surface2);
+    padding: 9px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .step-block.lock-step .step-header { background: var(--warn-bg); border-bottom-color: var(--warn-border); }
+  .step-num {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--text-primary);
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-block.lock-step .step-num { background: var(--warn); }
+  .step-name { font-size: 12px; font-weight: 500; color: var(--text-primary); flex: 1; }
+  .lock-tag {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--warn);
+    background: #FDE68A;
+    padding: 1px 6px;
+    border-radius: 20px;
+  }
+  .step-body { padding: 10px 12px; }
+  .conv-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .conv-item { }
+  .conv-item-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  .conv-item input[type=number] {
+    width: 100%;
+    text-align: center;
+  }
+
+  /* ── LOCK ROW ── */
+  .lock-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--warn-border);
+  }
+  .lock-row-label { font-size: 12px; color: var(--warn); flex: 1; font-weight: 500; }
+  .lock-row input[type=number] {
+    width: 80px;
+    border-color: var(--warn-border);
+    background: #FFFBEB;
+  }
+  .lock-btn {
+    padding: 5px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--surface);
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .lock-btn.active {
+    background: var(--warn-bg);
+    border-color: var(--warn-border);
+    color: var(--warn);
+  }
+  .lock-note {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--warn);
+    line-height: 1.4;
+    display: none;
+    padding: 6px 8px;
+    background: #FFFBEB;
+    border-radius: 4px;
+    border-left: 2px solid var(--warn-border);
+  }
+  .lock-note.show { display: block; }
+
+  /* ── OUTPUT METRICS (left panel) ── */
+  .output-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 2px;
+  }
+  .output-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+  }
+  .output-card.success {
+    background: var(--success-bg);
+    border-color: #6EE7B7;
+  }
+  .output-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+  }
+  .output-card.success .output-label { color: #059669; }
+  .output-val {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: -0.02em;
+  }
+  .output-card.success .output-val { color: var(--success); }
+  .output-sub {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+
+  /* ── TOTAL BAR ── */
+  .total-bar {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    margin-top: 8px;
+  }
+  .total-col { padding: 0 8px; border-right: 1px solid var(--border); }
+  .total-col:first-child { padding-left: 0; }
+  .total-col:last-child { border-right: none; }
+  .total-label { font-size: 10px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+  .total-val {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: 'DM Mono', monospace;
+  }
+  .total-val.green { color: var(--success); }
+
+  /* ── RIGHT PANEL ── */
+  .right-panel {
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: var(--bg);
+  }
+  .right-panel::-webkit-scrollbar { width: 4px; }
+  .right-panel::-webkit-scrollbar-track { background: transparent; }
+  .right-panel::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+  /* ── FUNNEL PAIR ── */
+  .funnel-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .funnel-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+  }
+  .funnel-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .funnel-card-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+  }
+  .funnel-legend {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .funnel-note {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── SUMMARY CARD ── */
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+  }
+  .summary-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 12px;
+  }
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .sum-cell {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+  }
+  .sum-cell.hl {
+    background: var(--success-bg);
+    border-color: #6EE7B7;
+  }
+  .sum-cell-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 5px;
+  }
+  .sum-cell.hl .sum-cell-label { color: #059669; }
+  .sum-cell-val {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: -0.02em;
+  }
+  .sum-cell.hl .sum-cell-val { color: var(--success); }
+  .sum-cell-unit {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* ── SVG FUNNEL ── */
+  svg { display: block; width: 100%; overflow: visible; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">Health Opportunities Funnel Simulator</div>
+    <div class="header-sub">VRM &amp; Non-VRM channel modelling · 6-month projection</div>
+  </div>
+  <div class="period-badge">6-Month View</div>
+</div>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('vrm', this)">VRM Channel</button>
+  <button class="tab-btn" onclick="switchTab('nv', this)">Non-VRM Channel</button>
+</div>
+
+<div class="main">
+
+  <!-- LEFT CONTROLS -->
+  <div class="left-panel">
+
+    <!-- VRM CONTROLS -->
+    <div id="ctrl-vrm">
+      <!-- Top of Funnel -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Top of Funnel</div>
+        </div>
+        <div class="card-body">
+          <div class="slider-row">
+            <div class="slider-label">
+              <span>No. of DPs</span>
+              <strong id="v-dp-lbl">24,286</strong>
+            </div>
+            <input type="range" id="v-dp" min="1000" max="100000" step="100" value="24286" oninput="U()">
+          </div>
+          <div class="tof-info">
+            <span class="tof-info-label">Opportunities at top <span style="color:var(--text-muted);font-size:11px">(DPs × avg opp/DP)</span></span>
+            <span class="tof-info-val" id="v-topopp">97,144</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Key Values -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Key Values</div>
+        </div>
+        <div class="card-body" style="padding-top:8px;padding-bottom:8px">
+          <div class="kv-row">
+            <span class="kv-label">Avg opportunities per DP</span>
+            <input type="number" id="v-opk" min="0.5" max="50" step="0.5" value="4" oninput="U()">
+          </div>
+          <div class="kv-row">
+            <span class="kv-label">Avg premium (₹)</span>
+            <input type="number" id="v-prm" min="1000" max="500000" step="1000" value="28000" oninput="U()">
+          </div>
+        </div>
+      </div>
+
+      <!-- Conversions -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Conversion % at Every Step</div>
+        </div>
+        <div class="card-body" style="padding-top:10px;padding-bottom:10px;display:flex;flex-direction:column;gap:8px">
+
+          <div class="step-block">
+            <div class="step-header">
+              <div class="step-num">1</div>
+              <div class="step-name">Opportunities Created</div>
+            </div>
+            <div class="step-body" style="padding:8px 12px">
+              <div style="font-size:11px;color:var(--text-muted)">Top of funnel — no conversion applied</div>
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:center"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M5 0v12M1 8l4 7 4-7" fill="none" stroke="#C0BEB8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+          <div class="step-block">
+            <div class="step-header">
+              <div class="step-num">2</div>
+              <div class="step-name">Opportunities Seen</div>
+            </div>
+            <div class="step-body">
+              <div class="conv-grid">
+                <div class="conv-item">
+                  <div class="conv-item-label">Opp conv %</div>
+                  <input type="number" id="v-c1o" min="1" max="99" value="50" oninput="U()">
+                </div>
+                <div class="conv-item">
+                  <div class="conv-item-label">DP conv %</div>
+                  <input type="number" id="v-c1d" min="1" max="99" value="50" oninput="U()">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:center"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M5 0v12M1 8l4 7 4-7" fill="none" stroke="#C0BEB8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+          <div class="step-block lock-step">
+            <div class="step-header">
+              <div class="step-num">3</div>
+              <div class="step-name">Leads / Quote Sent</div>
+              <span class="lock-tag">DP Lock</span>
+            </div>
+            <div class="step-body">
+              <div class="conv-grid">
+                <div class="conv-item">
+                  <div class="conv-item-label">Opp conv %</div>
+                  <input type="number" id="v-c2o" min="1" max="99" value="10" oninput="U()">
+                </div>
+                <div class="conv-item">
+                  <div class="conv-item-label">DP conv %</div>
+                  <input type="number" id="v-c2d" min="1" max="99" value="14" oninput="U()">
+                </div>
+              </div>
+              <div class="lock-row">
+                <span class="lock-row-label">🔒 Lock DPs at step 3</span>
+                <input type="number" id="v-cap" min="1" max="99999" value="1700" oninput="U()">
+                <button class="lock-btn active" id="v-lb" onclick="TL()">Locked</button>
+              </div>
+              <div class="lock-note show" id="v-ln">
+                Lock active — steps 1 &amp; 2 back-solve to honour this cap. Step 4 flows forward from the capped step 3.
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:center"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M5 0v12M1 8l4 7 4-7" fill="none" stroke="#C0BEB8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+          <div class="step-block">
+            <div class="step-header">
+              <div class="step-num">4</div>
+              <div class="step-name">Converted</div>
+            </div>
+            <div class="step-body">
+              <div class="conv-grid">
+                <div class="conv-item">
+                  <div class="conv-item-label">Opp conv %</div>
+                  <input type="number" id="v-c3o" min="1" max="99" value="8" oninput="U()">
+                </div>
+                <div class="conv-item">
+                  <div class="conv-item-label">DP conv %</div>
+                  <input type="number" id="v-c3d" min="1" max="99" value="11" oninput="U()">
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">VRM Channel Output</div>
+        </div>
+        <div class="card-body" style="padding-top:10px;padding-bottom:10px">
+          <div class="output-grid">
+            <div class="output-card">
+              <div class="output-label">6-Month Premium</div>
+              <div class="output-val" id="v-p6">—</div>
+              <div class="output-sub">Lacs</div>
+            </div>
+            <div class="output-card success">
+              <div class="output-label">Monthly Premium</div>
+              <div class="output-val" id="v-pm">—</div>
+              <div class="output-sub">Lacs / month</div>
+            </div>
+            <div class="output-card">
+              <div class="output-label">Policies Sold</div>
+              <div class="output-val" id="v-co">—</div>
+              <div class="output-sub">converted opps</div>
+            </div>
+            <div class="output-card">
+              <div class="output-label">Converted DPs</div>
+              <div class="output-val" id="v-cd">—</div>
+              <div class="output-sub">at step 4</div>
+            </div>
+          </div>
+          <div class="total-bar" style="margin-top:10px">
+            <div class="total-col">
+              <div class="total-label">VRM Monthly</div>
+              <div class="total-val" id="tb-v">—</div>
+            </div>
+            <div class="total-col">
+              <div class="total-label">Non-VRM Monthly</div>
+              <div class="total-val" id="tb-n">—</div>
+            </div>
+            <div class="total-col" style="padding-right:0">
+              <div class="total-label">Total Monthly</div>
+              <div class="total-val green" id="tb-t">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NON-VRM CONTROLS -->
+    <div id="ctrl-nv" style="display:none">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Top of Funnel</div></div>
+        <div class="card-body">
+          <div class="slider-row">
+            <div class="slider-label">
+              <span>No. of DPs</span>
+              <strong id="n-dp-lbl">4,000</strong>
+            </div>
+            <input type="range" id="n-dp" min="500" max="50000" step="100" value="4000" oninput="U()">
+          </div>
+          <div class="tof-info">
+            <span class="tof-info-label">Opportunities at top <span style="color:var(--text-muted);font-size:11px">(DPs × avg opp/DP)</span></span>
+            <span class="tof-info-val" id="n-topopp">16,000</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Key Values</div></div>
+        <div class="card-body" style="padding-top:8px;padding-bottom:8px">
+          <div class="kv-row">
+            <span class="kv-label">Avg opportunities per DP</span>
+            <input type="number" id="n-opk" min="0.5" max="50" step="0.5" value="4" oninput="U()">
+          </div>
+          <div class="kv-row">
+            <span class="kv-label">Avg premium (₹)</span>
+            <input type="number" id="n-prm" min="1000" max="500000" step="1000" value="28000" oninput="U()">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Conversion % at Every Step</div></div>
+        <div class="card-body" style="padding-top:10px;padding-bottom:10px;display:flex;flex-direction:column;gap:8px">
+
+          <div class="step-block">
+            <div class="step-header"><div class="step-num">1</div><div class="step-name">Opportunities Created</div></div>
+            <div class="step-body" style="padding:8px 12px"><div style="font-size:11px;color:var(--text-muted)">Top of funnel — no conversion applied</div></div>
+          </div>
+          <div style="display:flex;justify-content:center"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M5 0v12M1 8l4 7 4-7" fill="none" stroke="#C0BEB8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="step-block">
+            <div class="step-header"><div class="step-num">2</div><div class="step-name">Opportunities Seen</div></div>
+            <div class="step-body">
+              <div class="conv-grid">
+                <div class="conv-item"><div class="conv-item-label">Opp conv %</div><input type="number" id="n-c1o" min="1" max="99" value="50" oninput="U()"></div>
+                <div class="conv-item"><div class="conv-item-label">DP conv %</div><input type="number" id="n-c1d" min="1" max="99" value="50" oninput="U()"></div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:center"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M5 0v12M1 8l4 7 4-7" fill="none" stroke="#C0BEB8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="step-block">
+            <div class="step-header"><div class="step-num">3</div><div class="step-name">Leads / Quote Sent</div></div>
+            <div class="step-body">
+              <div class="conv-grid">
+                <div class="conv-item"><div class="conv-item-label">Opp conv %</div><input type="number" id="n-c2o" min="1" max="99" value="10" oninput="U()"></div>
+                <div class="conv-item"><div class="conv-item-label">DP conv %</div><input type="number" id="n-c2d" min="1" max="99" value="14" oninput="U()"></div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:center"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M5 0v12M1 8l4 7 4-7" fill="none" stroke="#C0BEB8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="step-block">
+            <div class="step-header"><div class="step-num">4</div><div class="step-name">Converted</div></div>
+            <div class="step-body">
+              <div class="conv-grid">
+                <div class="conv-item"><div class="conv-item-label">Opp conv %</div><input type="number" id="n-c3o" min="1" max="99" value="8" oninput="U()"></div>
+                <div class="conv-item"><div class="conv-item-label">DP conv %</div><input type="number" id="n-c3d" min="1" max="99" value="11" oninput="U()"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Non-VRM Channel Output</div></div>
+        <div class="card-body" style="padding-top:10px;padding-bottom:10px">
+          <div class="output-grid">
+            <div class="output-card"><div class="output-label">6-Month Premium</div><div class="output-val" id="n-p6">—</div><div class="output-sub">Lacs</div></div>
+            <div class="output-card success"><div class="output-label">Monthly Premium</div><div class="output-val" id="n-pm">—</div><div class="output-sub">Lacs / month</div></div>
+            <div class="output-card"><div class="output-label">Policies Sold</div><div class="output-val" id="n-co">—</div><div class="output-sub">converted opps</div></div>
+            <div class="output-card"><div class="output-label">Converted DPs</div><div class="output-val" id="n-cd">—</div><div class="output-sub">at step 4</div></div>
+          </div>
+          <div class="total-bar" style="margin-top:10px">
+            <div class="total-col"><div class="total-label">VRM Monthly</div><div class="total-val" id="tb-v2">—</div></div>
+            <div class="total-col"><div class="total-label">Non-VRM Monthly</div><div class="total-val" id="tb-n2">—</div></div>
+            <div class="total-col" style="padding-right:0"><div class="total-label">Total Monthly</div><div class="total-val green" id="tb-t2">—</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+
+    <!-- Funnel Pair -->
+    <div class="funnel-pair">
+      <div class="funnel-card">
+        <div class="funnel-card-header">
+          <div class="funnel-card-title">VRM Channel Funnel</div>
+          <div class="funnel-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--vrm-1)"></div>Opportunities</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--nv-1)"></div>DPs</div>
+          </div>
+        </div>
+        <svg id="v-svg" viewBox="0 0 480 420"></svg>
+        <div class="funnel-note">Bar width = relative volume &nbsp;·&nbsp; % from top shown per stage &nbsp;·&nbsp; Step % shown in tapers</div>
+      </div>
+
+      <div class="funnel-card">
+        <div class="funnel-card-header">
+          <div class="funnel-card-title">Non-VRM Channel Funnel</div>
+          <div class="funnel-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--vrm-1)"></div>Opportunities</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--nv-1)"></div>DPs</div>
+          </div>
+        </div>
+        <svg id="n-svg" viewBox="0 0 480 420"></svg>
+        <div class="funnel-note">Shared absolute scale with VRM — widths are directly comparable</div>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary-card">
+      <div class="summary-title">Combined Premium Summary</div>
+      <div class="summary-grid">
+        <div class="sum-cell"><div class="sum-cell-label">VRM 6-Month</div><div class="sum-cell-val" id="s-vp6">—</div><div class="sum-cell-unit">Lacs</div></div>
+        <div class="sum-cell"><div class="sum-cell-label">Non-VRM 6-Month</div><div class="sum-cell-val" id="s-np6">—</div><div class="sum-cell-unit">Lacs</div></div>
+        <div class="sum-cell hl"><div class="sum-cell-label">Total 6-Month</div><div class="sum-cell-val" id="s-tp6">—</div><div class="sum-cell-unit">Lacs</div></div>
+        <div class="sum-cell"><div class="sum-cell-label">VRM Monthly</div><div class="sum-cell-val" id="s-vpm">—</div><div class="sum-cell-unit">Lacs / month</div></div>
+        <div class="sum-cell"><div class="sum-cell-label">Non-VRM Monthly</div><div class="sum-cell-val" id="s-npm">—</div><div class="sum-cell-unit">Lacs / month</div></div>
+        <div class="sum-cell hl"><div class="sum-cell-label">Total Monthly</div><div class="sum-cell-val" id="s-tpm">—</div><div class="sum-cell-unit">Lacs / month</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+var LK = true;
+var OC = ['#3B2F8A','#5C4EC4','#8B7EE8','#C5BEFD'];
+var DC = ['#0D5C41','#1A8A5F','#4DB88A','#A8E6CA'];
+var LABS = ['Opps created','Opps seen','Leads / quote','Converted'];
+var RV = {pm:0, p6:0, d:null};
+var RN = {pm:0, p6:0, d:null};
+
+function fm(x) { return Math.round(x).toLocaleString('en-IN'); }
+function lc(x) { return (x/100000).toFixed(2); }
+function el(i) { return document.getElementById(i); }
+function vl(i) { return +el(i).value || 0; }
+
+function TL() {
+  LK = !LK;
+  el('v-lb').textContent = LK ? 'Locked' : 'Unlock';
+  el('v-lb').classList.toggle('active', LK);
+  el('v-ln').classList.toggle('show', LK);
+  U();
+}
+
+function calcVRM() {
+  var tDP=vl('v-dp'), opk=vl('v-opk'), prm=vl('v-prm');
+  var c1o=vl('v-c1o')/100, c1d=vl('v-c1d')/100;
+  var c2o=vl('v-c2o')/100, c2d=vl('v-c2d')/100;
+  var c3o=vl('v-c3o')/100, c3d=vl('v-c3d')/100;
+  var tO=tDP*opk;
+  var o=[tO, tO*c1o, tO*c1o*c2o, tO*c1o*c2o*c3o];
+  var d=[tDP, tDP*c1d, tDP*c1d*c2d, tDP*c1d*c2d*c3d];
+  var lk=false;
+  if(LK) {
+    var cap=vl('v-cap');
+    if(d[2]>cap) {
+      lk=true;
+      var d2=cap;
+      var d1=c2d>0 ? d2/c2d : d[1];
+      d[1]=Math.min(d1,tDP); d[2]=d2; d[3]=d2*c3d;
+    }
+  }
+  var op=[100, o[1]/o[0]*100, o[2]/o[0]*100, o[3]/o[0]*100];
+  var dp=[100, d[1]/d[0]*100, d[2]/d[0]*100, d[3]/d[0]*100];
+  var os=[null, c1o*100, c2o*100, c3o*100];
+  var ds=[null, d[1]>0&&d[0]>0?d[1]/d[0]*100:0, d[2]>0&&d[1]>0?d[2]/d[1]*100:0, d[3]>0&&d[2]>0?d[3]/d[2]*100:0];
+  var p6=o[3]*prm, pm=p6/6;
+  return {o,d,op,dp,os,ds,p6,pm,lk};
+}
+
+function calcNV() {
+  var tDP=vl('n-dp'), opk=vl('n-opk'), prm=vl('n-prm');
+  var c1o=vl('n-c1o')/100, c1d=vl('n-c1d')/100;
+  var c2o=vl('n-c2o')/100, c2d=vl('n-c2d')/100;
+  var c3o=vl('n-c3o')/100, c3d=vl('n-c3d')/100;
+  var tO=tDP*opk;
+  var o=[tO, tO*c1o, tO*c1o*c2o, tO*c1o*c2o*c3o];
+  var d=[tDP, tDP*c1d, tDP*c1d*c2d, tDP*c1d*c2d*c3d];
+  var op=[100, o[1]/o[0]*100, o[2]/o[0]*100, o[3]/o[0]*100];
+  var dp=[100, d[1]/d[0]*100, d[2]/d[0]*100, d[3]/d[0]*100];
+  var os=[null, c1o*100, c2o*100, c3o*100];
+  var ds=[null, d[1]/d[0]*100, d[2]/d[1]*100, d[3]/d[2]*100];
+  var p6=o[3]*prm, pm=p6/6;
+  return {o,d,op,dp,os,ds,p6,pm,lk:false};
+}
+
+function draw(sid, dat, mxO, mxD, lkAt) {
+  var sv = el(sid);
+  /* Geometry — tested: 480px wide, CX=240, MW=100 keeps all labels in-bounds */
+  var W=480, CX=240, BH=34, RH=96, TP=24, MW=100;
+  var s='';
+
+  for(var i=0;i<4;i++){
+    var cy = TP + i*RH + RH/2;
+    var wO = mxO>0 ? Math.max(6, dat.o[i]/mxO*MW) : 6;
+    var wD = mxD>0 ? Math.max(6, dat.d[i]/mxD*MW) : 6;
+
+    /* ── TAPER CONNECTORS + STEP % ── */
+    if(i<3){
+      var cy2 = TP+(i+1)*RH+RH/2;
+      var nO = mxO>0 ? Math.max(6, dat.o[i+1]/mxO*MW) : 6;
+      var nD = mxD>0 ? Math.max(6, dat.d[i+1]/mxD*MW) : 6;
+      var b1=cy+BH/2, b2=cy2-BH/2;
+      var mid = (b1+b2)/2;
+
+      s+='<polygon points="'+(CX-wO).toFixed(1)+','+b1+' '+CX+','+b1+' '+CX+','+b2+' '+(CX-nO).toFixed(1)+','+b2+'" fill="'+OC[i]+'" opacity="0.14"/>';
+      s+='<polygon points="'+CX+','+b1+' '+(CX+wD).toFixed(1)+','+b1+' '+(CX+nD).toFixed(1)+','+b2+' '+CX+','+b2+'" fill="'+DC[i]+'" opacity="0.14"/>';
+
+      /* Step % — inside taper, clear of bars */
+      var osp = dat.os[i+1]!=null ? dat.os[i+1].toFixed(0)+'%' : '';
+      var dsp = dat.ds[i+1]!=null ? dat.ds[i+1].toFixed(0)+'%' : '';
+      s+='<text x="'+(CX-5)+'" y="'+(mid+4.5)+'" text-anchor="end" '
+        +'font-size="11" font-family="DM Mono,monospace" font-weight="500" fill="'+OC[1]+'">'+osp+'</text>';
+      s+='<text x="'+(CX+5)+'" y="'+(mid+4.5)+'" text-anchor="start" '
+        +'font-size="11" font-family="DM Mono,monospace" font-weight="500" fill="'+DC[1]+'">'+dsp+'</text>';
+    }
+
+    /* ── BARS ── */
+    s+='<rect x="'+(CX-wO).toFixed(1)+'" y="'+(cy-BH/2)+'" width="'+wO.toFixed(1)+'" height="'+BH+'" rx="4" fill="'+OC[i]+'" style="transition:x .4s cubic-bezier(.4,0,.2,1),width .4s cubic-bezier(.4,0,.2,1)"/>';
+    s+='<rect x="'+CX+'" y="'+(cy-BH/2)+'" width="'+wD.toFixed(1)+'" height="'+BH+'" rx="4" fill="'+DC[i]+'" style="transition:width .4s cubic-bezier(.4,0,.2,1)"/>';
+
+    /* Lock icon */
+    if(lkAt===i && dat.lk){
+      s+='<text x="'+CX+'" y="'+(cy+5)+'" text-anchor="middle" font-size="14">🔒</text>';
+    }
+
+    /* ── LEFT LABELS (opp) — all anchored at fixed x, text-anchor=end ── */
+    /* Use fixed anchor: CX - MW - 16 so labels never collide with bars */
+    var Lx = CX - MW - 12;
+    /* Stage name */
+    s+='<text x="'+Lx+'" y="'+(cy-8)+'" text-anchor="end" '
+      +'font-size="10" font-family="DM Sans,sans-serif" font-weight="600" '
+      +'fill="'+OC[Math.min(i,2)]+'" letter-spacing="0.02em">'+LABS[i].toUpperCase()+'</text>';
+    /* Count */
+    s+='<text x="'+Lx+'" y="'+(cy+8)+'" text-anchor="end" '
+      +'font-size="14" font-family="DM Mono,monospace" font-weight="500" fill="'+OC[0]+'">'+fm(dat.o[i])+'</text>';
+    /* % from top */
+    if(i>0){
+      s+='<text x="'+Lx+'" y="'+(cy+22)+'" text-anchor="end" '
+        +'font-size="10" font-family="DM Sans,sans-serif" fill="'+OC[2]+'">'+dat.op[i].toFixed(1)+'% from top</text>';
+    }
+    /* Connector line from label to bar */
+    s+='<line x1="'+(Lx+2)+'" y1="'+cy+'" x2="'+(CX-wO-2).toFixed(1)+'" y2="'+cy+'" '
+      +'stroke="'+OC[i]+'" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.4"/>';
+
+    /* ── RIGHT LABELS (DP) — fixed anchor at CX + MW + 14 ── */
+    var Rx = CX + MW + 12;
+    s+='<text x="'+Rx+'" y="'+(cy-8)+'" text-anchor="start" '
+      +'font-size="10" font-family="DM Sans,sans-serif" font-weight="600" '
+      +'fill="'+DC[Math.min(i,2)]+'" letter-spacing="0.02em">DPS</text>';
+    s+='<text x="'+Rx+'" y="'+(cy+8)+'" text-anchor="start" '
+      +'font-size="14" font-family="DM Mono,monospace" font-weight="500" fill="'+DC[0]+'">'+fm(dat.d[i])+'</text>';
+    if(i>0){
+      s+='<text x="'+Rx+'" y="'+(cy+22)+'" text-anchor="start" '
+        +'font-size="10" font-family="DM Sans,sans-serif" fill="'+DC[2]+'">'+dat.dp[i].toFixed(1)+'% from top</text>';
+    }
+    /* Connector line from bar to label */
+    s+='<line x1="'+(CX+wD+2).toFixed(1)+'" y1="'+cy+'" x2="'+(Rx-2)+'" y2="'+cy+'" '
+      +'stroke="'+DC[i]+'" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.4"/>';
+  }
+
+  sv.innerHTML = s;
+}
+
+function U() {
+  var dv = calcVRM();
+  var dn = calcNV();
+  RV = {pm:dv.pm, p6:dv.p6, d:dv};
+  RN = {pm:dn.pm, p6:dn.p6, d:dn};
+
+  /* VRM outputs */
+  el('v-dp-lbl').textContent = fm(vl('v-dp'));
+  el('v-topopp').textContent = fm(vl('v-dp') * vl('v-opk'));
+  el('v-p6').textContent = lc(dv.p6);
+  el('v-pm').textContent = lc(dv.pm);
+  el('v-co').textContent = fm(Math.round(dv.o[3]));
+  el('v-cd').textContent = fm(Math.round(dv.d[3])) + (dv.lk ? ' 🔒' : '');
+  el('v-ln').classList.toggle('show', LK && dv.lk);
+
+  /* Non-VRM outputs */
+  el('n-dp-lbl').textContent = fm(vl('n-dp'));
+  el('n-topopp').textContent = fm(vl('n-dp') * vl('n-opk'));
+  el('n-p6').textContent = lc(dn.p6);
+  el('n-pm').textContent = lc(dn.pm);
+  el('n-co').textContent = fm(Math.round(dn.o[3]));
+  el('n-cd').textContent = fm(Math.round(dn.d[3]));
+
+  /* Totals */
+  var vpm=dv.pm, npm=dn.pm, tot=vpm+npm;
+  ['tb-v','tb-v2'].forEach(function(id){var e=el(id);if(e)e.textContent=lc(vpm)+' L';});
+  ['tb-n','tb-n2'].forEach(function(id){var e=el(id);if(e)e.textContent=lc(npm)+' L';});
+  ['tb-t','tb-t2'].forEach(function(id){var e=el(id);if(e)e.textContent=lc(tot)+' L';});
+
+  /* Summary */
+  el('s-vp6').textContent = lc(dv.p6);
+  el('s-np6').textContent = lc(dn.p6);
+  el('s-tp6').textContent = lc(dv.p6 + dn.p6);
+  el('s-vpm').textContent = lc(vpm);
+  el('s-npm').textContent = lc(npm);
+  el('s-tpm').textContent = lc(tot);
+
+  /* Draw funnels on shared absolute scale */
+  var gO = Math.max(dv.o[0], dn.o[0]);
+  var gD = Math.max(dv.d[0], dn.d[0]);
+  draw('v-svg', dv, gO, gD, 2);
+  draw('n-svg', dn, gO, gD, null);
+}
+
+function switchTab(ch, btn) {
+  el('ctrl-vrm').style.display = ch==='vrm' ? '' : 'none';
+  el('ctrl-nv').style.display  = ch==='nv'  ? '' : 'none';
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+}
+
+U();
+</script>
+</body>
+</html>
