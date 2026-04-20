@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Health Opportunities Funnel Simulator</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   :root {
     --bg: #F4F3EF;
@@ -522,6 +523,215 @@
 
   /* ── SVG FUNNEL ── */
   svg { display: block; width: 100%; overflow: visible; }
+
+  /* ── HEADER BUTTONS ── */
+  .hdr-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 13px; font-size: 12px; font-weight: 500;
+    font-family: 'DM Sans', sans-serif; border-radius: 20px;
+    cursor: pointer; transition: all 0.15s;
+    border: 1px solid var(--border); background: var(--surface2);
+    color: var(--text-secondary); white-space: nowrap;
+  }
+  .hdr-btn:hover { background: var(--border); color: var(--text-primary); }
+  .hdr-btn.primary { background: var(--text-primary); color: #fff; border-color: var(--text-primary); }
+  .hdr-btn.primary:hover { background: #2d2c28; }
+  .hdr-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ── MODAL OVERLAY ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(26,25,21,0.55);
+    backdrop-filter: blur(3px); z-index: 900;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-x {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-muted); font-size: 20px; line-height: 1;
+    padding: 2px 6px; border-radius: 4px;
+  }
+  .modal-x:hover { background: var(--surface2); color: var(--text-primary); }
+
+  /* ── SNAP SAVE DIALOG ── */
+  .snap-dialog {
+    background: var(--surface); border-radius: 14px; width: 460px;
+    max-height: 88vh; overflow-y: auto;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.22);
+  }
+  .modal-hdr {
+    padding: 16px 18px 12px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-hdr-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+  .snap-preview-wrap {
+    padding: 12px 18px; background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .snap-preview-wrap img {
+    width: 100%; border-radius: 6px; display: block;
+    border: 1px solid var(--border); max-height: 180px; object-fit: cover;
+  }
+  .snap-form { padding: 14px 18px; display: flex; flex-direction: column; gap: 10px; }
+  .snap-form-label {
+    font-size: 11px; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .snap-form input[type="text"], .snap-form select {
+    width: 100%; padding: 7px 10px; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); font-size: 13px;
+    font-family: 'DM Sans', sans-serif; color: var(--text-primary);
+    background: var(--surface); outline: none;
+  }
+  .snap-form input[type="text"]:focus, .snap-form select:focus {
+    border-color: var(--vrm-2); box-shadow: 0 0 0 2px var(--vrm-light);
+  }
+  .new-folder-row { display: none; gap: 6px; }
+  .new-folder-row input { flex: 1; }
+  .snap-actions {
+    padding: 10px 18px 14px; display: flex; gap: 8px;
+    justify-content: flex-end; border-top: 1px solid var(--border);
+  }
+  .snap-actions button {
+    padding: 7px 16px; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: all 0.12s;
+  }
+  .btn-cancel { background: var(--surface2); border: 1px solid var(--border); color: var(--text-secondary); }
+  .btn-cancel:hover { background: var(--border); }
+  .btn-save { background: var(--text-primary); border: 1px solid var(--text-primary); color: #fff; }
+  .btn-save:hover { background: #2d2c28; }
+
+  /* ── LIBRARY MODAL ── */
+  .lib-dialog {
+    background: var(--surface); border-radius: 14px;
+    width: min(880px, 95vw); height: 80vh;
+    display: flex; flex-direction: column;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.22); overflow: hidden;
+  }
+  .lib-top {
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+  }
+  .lib-top-title { font-size: 14px; font-weight: 600; color: var(--text-primary); flex: 1; }
+  .lib-body { display: flex; flex: 1; overflow: hidden; }
+  .lib-sidebar {
+    width: 196px; border-right: 1px solid var(--border);
+    background: var(--surface2); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0;
+  }
+  .lib-sidebar-hdr {
+    font-size: 10px; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.07em; padding: 12px 12px 6px;
+  }
+  .lib-folder-list { flex: 1; overflow-y: auto; padding: 3px 6px 4px; }
+  .lib-fi {
+    display: flex; align-items: center; gap: 7px;
+    padding: 7px 8px; border-radius: var(--radius-sm);
+    cursor: pointer; font-size: 12.5px; color: var(--text-secondary);
+    transition: background 0.12s; user-select: none;
+  }
+  .lib-fi:hover { background: var(--border); color: var(--text-primary); }
+  .lib-fi.active { background: var(--vrm-light); color: var(--vrm-2); font-weight: 500; }
+  .lib-fi .fcount { margin-left: auto; font-size: 11px; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+  .lib-fi.active .fcount { color: var(--vrm-3); }
+  .lib-new-btn {
+    margin: 6px; padding: 6px 10px; border: 1px dashed var(--border2);
+    border-radius: var(--radius-sm); background: none; font-size: 12px;
+    color: var(--text-muted); cursor: pointer; font-family: 'DM Sans', sans-serif;
+    text-align: left; transition: all 0.12s; flex-shrink: 0;
+  }
+  .lib-new-btn:hover { border-color: var(--vrm-2); color: var(--vrm-2); background: var(--vrm-light); }
+  .lib-nfi-row { display: none; gap: 4px; padding: 4px 6px; flex-shrink: 0; }
+  .lib-nfi-row input {
+    flex: 1; border: 1px solid var(--vrm-2); border-radius: 4px;
+    padding: 4px 7px; font-size: 12px; font-family: 'DM Sans', sans-serif;
+    outline: none; background: var(--surface); color: var(--text-primary);
+  }
+  .lib-nfi-row button {
+    border: none; background: var(--vrm-2); color: #fff;
+    border-radius: 4px; padding: 4px 9px; font-size: 13px; cursor: pointer;
+  }
+  .lib-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .lib-content-hdr {
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; flex-shrink: 0;
+  }
+  .lib-ctitle { font-size: 13px; font-weight: 600; color: var(--text-primary); flex: 1; }
+  .lib-grid {
+    flex: 1; overflow-y: auto; padding: 14px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(186px,1fr));
+    gap: 10px; align-content: start;
+  }
+  .lib-empty {
+    grid-column: 1/-1; text-align: center;
+    padding: 60px 20px; color: var(--text-muted); font-size: 13px; line-height: 1.8;
+  }
+  .sc {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; cursor: pointer; background: var(--surface);
+    transition: box-shadow 0.15s, border-color 0.15s;
+  }
+  .sc:hover { box-shadow: var(--shadow-md); border-color: var(--border2); }
+  .sc-thumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; background: var(--surface2); }
+  .sc-body { padding: 7px 9px; }
+  .sc-name { font-size: 12px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+  .sc-date { font-size: 10px; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+  .sc-btns { display: flex; gap: 4px; padding: 5px 9px; border-top: 1px solid var(--border); background: var(--surface2); }
+  .sc-btn {
+    flex: 1; padding: 4px; border: none; background: none;
+    font-size: 11px; color: var(--text-muted); cursor: pointer;
+    border-radius: 4px; font-family: 'DM Sans', sans-serif; transition: all 0.12s;
+  }
+  .sc-btn:hover { background: var(--border); color: var(--text-primary); }
+  .sc-btn.del:hover { background: #FEE2E2; color: #DC2626; }
+
+  /* ── SNAP VIEWER ── */
+  .snap-viewer {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.88);
+    z-index: 1100; display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
+  .snap-viewer img { max-width: 100%; max-height: 100%; border-radius: 8px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+  .snap-viewer-x {
+    position: absolute; top: 20px; right: 20px;
+    background: rgba(255,255,255,0.18); border: none; color: #fff;
+    font-size: 18px; width: 34px; height: 34px; border-radius: 50%;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .snap-viewer-x:hover { background: rgba(255,255,255,0.3); }
+
+  /* ── REVENUE CHART CARD ── */
+  .rev-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+  }
+  .rev-card-header { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; }
+  .rev-card-title { font-size: 12px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.01em; }
+  .rev-card-sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+  .rev-legend { display: flex; align-items: center; gap: 10px; }
+  .rev-totals {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 14px;
+  }
+  .rev-total-cell {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 10px 12px;
+  }
+  .rev-total-cell.hl { background: var(--success-bg); border-color: #6EE7B7; }
+  .rev-total-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .rev-total-cell.hl .rev-total-label { color: #059669; }
+  .rev-total-val { font-size: 20px; font-weight: 600; color: var(--text-primary); font-family: 'DM Mono', monospace; letter-spacing: -0.02em; }
+  .rev-total-cell.hl .rev-total-val { color: var(--success); }
+  .rev-total-unit { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+  /* ── TOAST ── */
+  .snap-toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    background: var(--text-primary); color: #fff;
+    padding: 8px 18px; border-radius: 20px; font-size: 12px; font-weight: 500;
+    opacity: 0; transition: opacity 0.25s, transform 0.25s;
+    pointer-events: none; z-index: 2000; white-space: nowrap;
+  }
 </style>
 </head>
 <body>
@@ -531,7 +741,17 @@
     <div class="header-title">Health Opportunities Funnel Simulator</div>
     <div class="header-sub">VRM &amp; Non-VRM channel modelling · 6-month projection</div>
   </div>
-  <div class="period-badge">6-Month View</div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <button class="hdr-btn" onclick="openLibrary()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2 4.5A1.5 1.5 0 013.5 3h3.086a1.5 1.5 0 011.06.44l.915.914A1.5 1.5 0 0010.621 5H13A1.5 1.5 0 0114.5 6.5v6A1.5 1.5 0 0113 14H3.5A1.5 1.5 0 012 12.5v-8z" fill="currentColor" fill-opacity="0.15"/></svg>
+      Library
+    </button>
+    <button class="hdr-btn primary" id="snap-btn" onclick="takeSnapshot()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1" y="4.5" width="14" height="9.5" rx="2"/><circle cx="8" cy="9.25" r="2.2"/><path d="M5.5 4.5l.8-2h3.4l.8 2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Snapshot
+    </button>
+    <div class="period-badge">6-Month View</div>
+  </div>
 </div>
 
 <div class="tab-bar">
@@ -675,50 +895,6 @@
         </div>
       </div>
 
-      <!-- Outputs -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">VRM Channel Output</div>
-        </div>
-        <div class="card-body" style="padding-top:10px;padding-bottom:10px">
-          <div class="output-grid">
-            <div class="output-card">
-              <div class="output-label">6-Month Premium</div>
-              <div class="output-val" id="v-p6">—</div>
-              <div class="output-sub">Lacs</div>
-            </div>
-            <div class="output-card success">
-              <div class="output-label">Monthly Premium</div>
-              <div class="output-val" id="v-pm">—</div>
-              <div class="output-sub">Lacs / month</div>
-            </div>
-            <div class="output-card">
-              <div class="output-label">Policies Sold</div>
-              <div class="output-val" id="v-co">—</div>
-              <div class="output-sub">converted opps</div>
-            </div>
-            <div class="output-card">
-              <div class="output-label">Converted DPs</div>
-              <div class="output-val" id="v-cd">—</div>
-              <div class="output-sub">at step 4</div>
-            </div>
-          </div>
-          <div class="total-bar" style="margin-top:10px">
-            <div class="total-col">
-              <div class="total-label">VRM Monthly</div>
-              <div class="total-val" id="tb-v">—</div>
-            </div>
-            <div class="total-col">
-              <div class="total-label">Non-VRM Monthly</div>
-              <div class="total-val" id="tb-n">—</div>
-            </div>
-            <div class="total-col" style="padding-right:0">
-              <div class="total-label">Total Monthly</div>
-              <div class="total-val green" id="tb-t">—</div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- NON-VRM CONTROLS -->
@@ -795,22 +971,6 @@
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-header"><div class="card-title">Non-VRM Channel Output</div></div>
-        <div class="card-body" style="padding-top:10px;padding-bottom:10px">
-          <div class="output-grid">
-            <div class="output-card"><div class="output-label">6-Month Premium</div><div class="output-val" id="n-p6">—</div><div class="output-sub">Lacs</div></div>
-            <div class="output-card success"><div class="output-label">Monthly Premium</div><div class="output-val" id="n-pm">—</div><div class="output-sub">Lacs / month</div></div>
-            <div class="output-card"><div class="output-label">Policies Sold</div><div class="output-val" id="n-co">—</div><div class="output-sub">converted opps</div></div>
-            <div class="output-card"><div class="output-label">Converted DPs</div><div class="output-val" id="n-cd">—</div><div class="output-sub">at step 4</div></div>
-          </div>
-          <div class="total-bar" style="margin-top:10px">
-            <div class="total-col"><div class="total-label">VRM Monthly</div><div class="total-val" id="tb-v2">—</div></div>
-            <div class="total-col"><div class="total-label">Non-VRM Monthly</div><div class="total-val" id="tb-n2">—</div></div>
-            <div class="total-col" style="padding-right:0"><div class="total-label">Total Monthly</div><div class="total-val green" id="tb-t2">—</div></div>
-          </div>
-        </div>
-      </div>
     </div>
 
   </div>
@@ -847,7 +1007,7 @@
 
     <!-- Summary -->
     <div class="summary-card">
-      <div class="summary-title">Combined Premium Summary</div>
+      <div class="summary-title">Single-Push Funnel Output (6-Month)</div>
       <div class="summary-grid">
         <div class="sum-cell"><div class="sum-cell-label">VRM 6-Month</div><div class="sum-cell-val" id="s-vp6">—</div><div class="sum-cell-unit">Lacs</div></div>
         <div class="sum-cell"><div class="sum-cell-label">Non-VRM 6-Month</div><div class="sum-cell-val" id="s-np6">—</div><div class="sum-cell-unit">Lacs</div></div>
@@ -858,8 +1018,103 @@
       </div>
     </div>
 
+    <!-- 12-Month Recurring Revenue Chart -->
+    <div class="rev-card">
+      <div class="rev-card-header">
+        <div>
+          <div class="rev-card-title">12-Month Recurring Revenue</div>
+          <div class="rev-card-sub">Monthly top-of-funnel push · 6-month conversion lifecycle per cohort</div>
+        </div>
+        <div class="rev-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--vrm-3)"></div>VRM</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--nv-3)"></div>Non-VRM</div>
+        </div>
+      </div>
+      <svg id="rev-svg" viewBox="0 0 560 190" style="width:100%;display:block;overflow:visible"></svg>
+      <div class="rev-totals">
+        <div class="rev-total-cell">
+          <div class="rev-total-label">6-Month Cumulative</div>
+          <div class="rev-total-val" id="rt-6m">—</div>
+          <div class="rev-total-unit">Lacs</div>
+        </div>
+        <div class="rev-total-cell">
+          <div class="rev-total-label">Steady-State Monthly</div>
+          <div class="rev-total-val" id="rt-ss">—</div>
+          <div class="rev-total-unit">Lacs / month</div>
+        </div>
+        <div class="rev-total-cell hl">
+          <div class="rev-total-label">12-Month Cumulative</div>
+          <div class="rev-total-val" id="rt-12m">—</div>
+          <div class="rev-total-unit">Lacs</div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
+
+<!-- ── SNAP SAVE DIALOG ── -->
+<div class="modal-overlay" id="snap-modal" style="display:none" onclick="if(event.target===this)closeSnapModal()">
+  <div class="snap-dialog">
+    <div class="modal-hdr">
+      <span class="modal-hdr-title">Save Snapshot</span>
+      <button class="modal-x" onclick="closeSnapModal()">&#xd7;</button>
+    </div>
+    <div class="snap-preview-wrap">
+      <img id="snap-preview-img" src="" alt="Snapshot preview">
+    </div>
+    <div class="snap-form">
+      <div class="snap-form-label">Name</div>
+      <input type="text" id="snap-name-input" placeholder="e.g. High conversion scenario">
+      <div class="snap-form-label">Save to folder</div>
+      <select id="snap-folder-sel" onchange="onFolderSelChange()"></select>
+      <div class="new-folder-row" id="new-folder-row">
+        <input type="text" id="new-folder-input" placeholder="New folder name" onkeydown="if(event.key==='Enter')saveSnapshot()">
+      </div>
+    </div>
+    <div class="snap-actions">
+      <button class="btn-cancel" onclick="closeSnapModal()">Cancel</button>
+      <button class="btn-save" onclick="saveSnapshot()">Save Snapshot</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── LIBRARY MODAL ── -->
+<div class="modal-overlay" id="lib-modal" style="display:none" onclick="if(event.target===this)closeLibrary()">
+  <div class="lib-dialog">
+    <div class="lib-top">
+      <span class="lib-top-title">Snapshot Library</span>
+      <button class="modal-x" onclick="closeLibrary()">&#xd7;</button>
+    </div>
+    <div class="lib-body">
+      <div class="lib-sidebar">
+        <div class="lib-sidebar-hdr">Folders</div>
+        <div class="lib-folder-list" id="lib-folder-list"></div>
+        <button class="lib-new-btn" id="lib-new-btn" onclick="showNewFolderInput()">+ New Folder</button>
+        <div class="lib-nfi-row" id="lib-nfi-row">
+          <input type="text" id="lib-nfi" placeholder="Folder name"
+            onkeydown="if(event.key==='Enter')confirmNewFolder();else if(event.key==='Escape')hideNewFolderInput()">
+          <button onclick="confirmNewFolder()">&#10003;</button>
+        </div>
+      </div>
+      <div class="lib-content">
+        <div class="lib-content-hdr">
+          <span class="lib-ctitle" id="lib-ctitle">All Snapshots</span>
+        </div>
+        <div class="lib-grid" id="lib-grid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── FULL-SIZE VIEWER ── -->
+<div class="snap-viewer" id="snap-viewer" style="display:none" onclick="if(event.target===this)closeViewer()">
+  <img id="snap-viewer-img" src="" alt="">
+  <button class="snap-viewer-x" onclick="closeViewer()">&#xd7;</button>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="snap-toast" id="snap-toast"></div>
 
 <script>
 var LK = true;
@@ -1008,30 +1263,15 @@ function U() {
   RV = {pm:dv.pm, p6:dv.p6, d:dv};
   RN = {pm:dn.pm, p6:dn.p6, d:dn};
 
-  /* VRM outputs */
+  /* Control labels */
   el('v-dp-lbl').textContent = fm(vl('v-dp'));
   el('v-topopp').textContent = fm(vl('v-dp') * vl('v-opk'));
-  el('v-p6').textContent = lc(dv.p6);
-  el('v-pm').textContent = lc(dv.pm);
-  el('v-co').textContent = fm(Math.round(dv.o[3]));
-  el('v-cd').textContent = fm(Math.round(dv.d[3])) + (dv.lk ? ' 🔒' : '');
   el('v-ln').classList.toggle('show', LK && dv.lk);
-
-  /* Non-VRM outputs */
   el('n-dp-lbl').textContent = fm(vl('n-dp'));
   el('n-topopp').textContent = fm(vl('n-dp') * vl('n-opk'));
-  el('n-p6').textContent = lc(dn.p6);
-  el('n-pm').textContent = lc(dn.pm);
-  el('n-co').textContent = fm(Math.round(dn.o[3]));
-  el('n-cd').textContent = fm(Math.round(dn.d[3]));
 
-  /* Totals */
+  /* Single-push summary */
   var vpm=dv.pm, npm=dn.pm, tot=vpm+npm;
-  ['tb-v','tb-v2'].forEach(function(id){var e=el(id);if(e)e.textContent=lc(vpm)+' L';});
-  ['tb-n','tb-n2'].forEach(function(id){var e=el(id);if(e)e.textContent=lc(npm)+' L';});
-  ['tb-t','tb-t2'].forEach(function(id){var e=el(id);if(e)e.textContent=lc(tot)+' L';});
-
-  /* Summary */
   el('s-vp6').textContent = lc(dv.p6);
   el('s-np6').textContent = lc(dn.p6);
   el('s-tp6').textContent = lc(dv.p6 + dn.p6);
@@ -1044,6 +1284,66 @@ function U() {
   var gD = Math.max(dv.d[0], dn.d[0]);
   draw('v-svg', dv, gO, gD, 2);
   draw('n-svg', dn, gO, gD, null);
+
+  drawRevChart();
+}
+
+function drawRevChart() {
+  var sv = el('rev-svg');
+  if(!sv) return;
+  var W=560, H=190, mT=20, mB=52, mL=46, mR=10;
+  var cW=W-mL-mR, cH=H-mT-mB;
+  var pm_vrm=RV.pm, pm_nv=RN.pm, pm_tot=pm_vrm+pm_nv;
+  var maxVal=6*pm_tot;
+
+  if(maxVal===0) {
+    sv.innerHTML='<text x="280" y="95" text-anchor="middle" font-size="12" fill="#9B9890" font-family="DM Sans,sans-serif">Enter values to see projection</text>';
+    el('rt-6m').textContent='—'; el('rt-ss').textContent='—'; el('rt-12m').textContent='—';
+    return;
+  }
+
+  var s='';
+  /* Gridlines — 3 levels */
+  [1/3,2/3,1].forEach(function(pct){
+    var val=maxVal*pct, y=mT+cH-cH*pct;
+    s+='<line x1="'+mL+'" y1="'+y.toFixed(1)+'" x2="'+(mL+cW)+'" y2="'+y.toFixed(1)+'" stroke="#E8E6E0" stroke-width="1"/>';
+    s+='<text x="'+(mL-5)+'" y="'+(y+3.5)+'" text-anchor="end" font-size="9" font-family="DM Mono,monospace" fill="#9B9890">'+(val/100000).toFixed(1)+'</text>';
+  });
+
+  /* Bars */
+  var unit=cW/12, bW=unit*0.62, bOff=(unit-bW)/2;
+  var tot6=0, tot12=0;
+  for(var i=0;i<12;i++){
+    var m=i+1, cohorts=Math.min(m,6);
+    var vrmVal=cohorts*pm_vrm, nvVal=cohorts*pm_nv, totVal=cohorts*pm_tot;
+    if(m<=6) tot6+=totVal; tot12+=totVal;
+    var x=mL+i*unit+bOff;
+    var alpha=m<=5?0.48:1;
+    var totH=maxVal>0?(totVal/maxVal)*cH:0;
+    var nvH=maxVal>0?(nvVal/maxVal)*cH:0;
+    var vrmH=totH-nvH;
+    var baseY=mT+cH, nvY=baseY-nvH, vrmY=nvY-vrmH;
+    if(nvH>0.5) s+='<rect x="'+x.toFixed(1)+'" y="'+nvY.toFixed(1)+'" width="'+bW.toFixed(1)+'" height="'+nvH.toFixed(1)+'" rx="2" fill="#4DB88A" opacity="'+alpha+'"/>';
+    if(vrmH>0.5) s+='<rect x="'+x.toFixed(1)+'" y="'+vrmY.toFixed(1)+'" width="'+bW.toFixed(1)+'" height="'+vrmH.toFixed(1)+'" rx="2" fill="#8B7EE8" opacity="'+alpha+'"/>';
+    /* Month label */
+    s+='<text x="'+(x+bW/2).toFixed(1)+'" y="'+(baseY+13)+'" text-anchor="middle" font-size="9.5" font-family="DM Sans,sans-serif" fill="'+(m<=5?'#C0BEB8':'#9B9890')+'">M'+m+'</text>';
+    /* Value callout for M1, M6, M12 */
+    if(m===1||m===6||m===12){
+      var lbl=(totVal/100000).toFixed(1)+'L';
+      s+='<text x="'+(x+bW/2).toFixed(1)+'" y="'+(vrmY-5)+'" text-anchor="middle" font-size="9" font-family="DM Mono,monospace" font-weight="500" fill="#3B2F8A">'+lbl+'</text>';
+    }
+  }
+
+  /* Phase separator */
+  var sepX=mL+5.5*unit;
+  s+='<line x1="'+sepX.toFixed(1)+'" y1="'+(mT-4)+'" x2="'+sepX.toFixed(1)+'" y2="'+(mT+cH+20)+'" stroke="#D0CEC6" stroke-width="1" stroke-dasharray="3,3"/>';
+  s+='<text x="'+(mL+2.5*unit).toFixed(1)+'" y="'+(mT+cH+30)+'" text-anchor="middle" font-size="9" font-family="DM Sans,sans-serif" fill="#C0BEB8">Ramp-up</text>';
+  s+='<text x="'+(mL+8.75*unit).toFixed(1)+'" y="'+(mT+cH+30)+'" text-anchor="middle" font-size="9" font-family="DM Sans,sans-serif" fill="#9B9890">Steady state</text>';
+
+  sv.innerHTML=s;
+  el('rt-6m').textContent=(tot6/100000).toFixed(2);
+  el('rt-ss').textContent=((6*pm_tot)/100000).toFixed(2);
+  el('rt-12m').textContent=(tot12/100000).toFixed(2);
 }
 
 function switchTab(ch, btn) {
@@ -1054,6 +1354,181 @@ function switchTab(ch, btn) {
 }
 
 U();
+
+// ── SNAPSHOT & LIBRARY SYSTEM ──
+var _pendingSnapUrl = null;
+var _libFolder = '__all__';
+
+function _snapStore() { try { return JSON.parse(localStorage.getItem('hofs_snaps')||'[]'); } catch(e) { return []; } }
+function _foldStore() { try { return JSON.parse(localStorage.getItem('hofs_folders')||'["General"]'); } catch(e) { return ['General']; } }
+function _snapSave(s) { try { localStorage.setItem('hofs_snaps', JSON.stringify(s)); } catch(e) { alert('Storage full — please delete some older snapshots first.'); } }
+function _foldSave(f) { localStorage.setItem('hofs_folders', JSON.stringify(f)); }
+function _esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function _escJs(s) { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n'); }
+
+async function takeSnapshot() {
+  var btn = el('snap-btn');
+  var orig = btn.innerHTML;
+  btn.textContent = 'Capturing…';
+  btn.disabled = true;
+  try {
+    var target = document.querySelector('.right-panel');
+    var canvas = await html2canvas(target, {
+      backgroundColor: '#F8F7F4', scale: 2,
+      useCORS: true, logging: false, allowTaint: true
+    });
+    _pendingSnapUrl = canvas.toDataURL('image/jpeg', 0.78);
+    el('snap-preview-img').src = _pendingSnapUrl;
+    var now = new Date();
+    var ds = now.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+    el('snap-name-input').value = ds + '  ·  VRM ' + lc(RV.pm) + 'L  ·  NV ' + lc(RN.pm) + 'L';
+    _populateFolderSel();
+    el('snap-modal').style.display = 'flex';
+  } catch(err) {
+    alert('Could not capture snapshot: ' + err.message);
+  }
+  btn.innerHTML = orig;
+  btn.disabled = false;
+}
+
+function _populateFolderSel() {
+  var folds = _foldStore();
+  el('snap-folder-sel').innerHTML = folds.map(function(f){
+    return '<option value="'+_esc(f)+'">'+_esc(f)+'</option>';
+  }).join('') + '<option value="__new__">+ New folder…</option>';
+  el('new-folder-row').style.display = 'none';
+  el('new-folder-input').value = '';
+}
+
+function onFolderSelChange() {
+  var show = el('snap-folder-sel').value === '__new__';
+  el('new-folder-row').style.display = show ? 'flex' : 'none';
+  if(show) el('new-folder-input').focus();
+}
+
+function closeSnapModal() {
+  el('snap-modal').style.display = 'none';
+  _pendingSnapUrl = null;
+}
+
+function saveSnapshot() {
+  if(!_pendingSnapUrl) return;
+  var name = el('snap-name-input').value.trim() || 'Untitled';
+  var folder = el('snap-folder-sel').value;
+  if(folder === '__new__') {
+    var nf = (el('new-folder-input').value || '').trim();
+    if(!nf) { el('new-folder-input').focus(); return; }
+    var folds = _foldStore();
+    if(folds.indexOf(nf) === -1) { folds.push(nf); _foldSave(folds); }
+    folder = nf;
+  }
+  var snaps = _snapStore();
+  snaps.unshift({ id: 'snap_'+Date.now(), name: name, folder: folder, date: new Date().toISOString(), image: _pendingSnapUrl });
+  _snapSave(snaps);
+  closeSnapModal();
+  _showToast('Saved to "' + folder + '"');
+}
+
+function _showToast(msg) {
+  var t = el('snap-toast');
+  t.textContent = msg;
+  t.style.opacity = '1'; t.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(t._tmr);
+  t._tmr = setTimeout(function(){ t.style.opacity='0'; t.style.transform='translateX(-50%) translateY(8px)'; }, 2400);
+}
+
+// ── LIBRARY ──
+function openLibrary() {
+  _libFolder = '__all__';
+  hideNewFolderInput();
+  _renderLibFolders();
+  _renderLibGrid();
+  el('lib-modal').style.display = 'flex';
+}
+function closeLibrary() { el('lib-modal').style.display = 'none'; }
+
+function _renderLibFolders() {
+  var snaps = _snapStore();
+  var folds = _foldStore();
+  var html = '<div class="lib-fi'+(_libFolder==='__all__'?' active':'')+'" onclick="setLibFolder(\'__all__\')">'
+    + '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2 4.5A1.5 1.5 0 013.5 3h4l1 2H13a1.5 1.5 0 011.5 1.5v6A1.5 1.5 0 0113 14H3.5A1.5 1.5 0 012 12.5v-8z"/></svg>'
+    + 'All Snapshots<span class="fcount">'+snaps.length+'</span></div>';
+  folds.forEach(function(f) {
+    var cnt = snaps.filter(function(s){ return s.folder===f; }).length;
+    html += '<div class="lib-fi'+(_libFolder===f?' active':'')+'" onclick="setLibFolder(\''+_escJs(f)+'\')">'
+      + '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2 4.5A1.5 1.5 0 013.5 3h3.086a1.5 1.5 0 011.06.44l.915.914A1.5 1.5 0 0010.621 5H13A1.5 1.5 0 0114.5 6.5v6A1.5 1.5 0 0113 14H3.5A1.5 1.5 0 012 12.5v-8z" fill="currentColor" fill-opacity="0.15"/></svg>'
+      + _esc(f)+'<span class="fcount">'+cnt+'</span></div>';
+  });
+  el('lib-folder-list').innerHTML = html;
+}
+
+function setLibFolder(f) { _libFolder = f; _renderLibFolders(); _renderLibGrid(); }
+
+function _renderLibGrid() {
+  var snaps = _snapStore();
+  var filtered = _libFolder==='__all__' ? snaps : snaps.filter(function(s){ return s.folder===_libFolder; });
+  var label = _libFolder==='__all__' ? 'All Snapshots' : _libFolder;
+  el('lib-ctitle').textContent = label + ' (' + filtered.length + ')';
+  if(!filtered.length) {
+    el('lib-grid').innerHTML = '<div class="lib-empty">No snapshots here yet.<br>Click <strong>Snapshot</strong> to capture one.</div>';
+    return;
+  }
+  el('lib-grid').innerHTML = filtered.map(function(s) {
+    var d = new Date(s.date);
+    var ds = d.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'})
+           + ' · ' + d.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+    return '<div class="sc" onclick="viewSnap(\''+_escJs(s.id)+'\')">'
+      + '<img class="sc-thumb" src="'+s.image+'" loading="lazy">'
+      + '<div class="sc-body"><div class="sc-name" title="'+_esc(s.name)+'">'+_esc(s.name)+'</div>'
+      + '<div class="sc-date">'+_esc(ds)+'</div></div>'
+      + '<div class="sc-btns">'
+      + '<button class="sc-btn" onclick="event.stopPropagation();dlSnap(\''+_escJs(s.id)+'\')">&#8595; Download</button>'
+      + '<button class="sc-btn del" onclick="event.stopPropagation();delSnap(\''+_escJs(s.id)+'\')">Delete</button>'
+      + '</div></div>';
+  }).join('');
+}
+
+function viewSnap(id) {
+  var s = _snapStore().find(function(x){ return x.id===id; });
+  if(!s) return;
+  el('snap-viewer-img').src = s.image;
+  el('snap-viewer').style.display = 'flex';
+}
+function closeViewer() { el('snap-viewer').style.display = 'none'; }
+
+function dlSnap(id) {
+  var s = _snapStore().find(function(x){ return x.id===id; });
+  if(!s) return;
+  var a = document.createElement('a');
+  a.href = s.image;
+  a.download = (s.name.replace(/[^\w\s\-·]/g,'').trim() || 'snapshot') + '.jpg';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+function delSnap(id) {
+  if(!confirm('Delete this snapshot? This cannot be undone.')) return;
+  _snapSave(_snapStore().filter(function(s){ return s.id!==id; }));
+  _renderLibFolders(); _renderLibGrid();
+}
+
+function showNewFolderInput() {
+  el('lib-nfi-row').style.display = 'flex';
+  el('lib-new-btn').style.display = 'none';
+  el('lib-nfi').value = '';
+  setTimeout(function(){ el('lib-nfi').focus(); }, 30);
+}
+function hideNewFolderInput() {
+  el('lib-nfi-row').style.display = 'none';
+  el('lib-new-btn').style.display = '';
+}
+function confirmNewFolder() {
+  var name = (el('lib-nfi').value || '').trim();
+  if(!name) return;
+  var folds = _foldStore();
+  if(folds.indexOf(name) === -1) { folds.push(name); _foldSave(folds); }
+  hideNewFolderInput();
+  setLibFolder(name);
+}
 </script>
 </body>
 </html>
