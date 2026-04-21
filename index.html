@@ -1001,7 +1001,7 @@
           </div>
         </div>
         <svg id="n-svg" viewBox="0 0 480 420"></svg>
-        <div class="funnel-note">Shared absolute scale with VRM — widths are directly comparable</div>
+        <div class="funnel-note">Independent scale — bar width shows step-to-step conversion within this channel</div>
       </div>
     </div>
 
@@ -1279,11 +1279,9 @@ function U() {
   el('s-npm').textContent = lc(npm);
   el('s-tpm').textContent = lc(tot);
 
-  /* Draw funnels on shared absolute scale */
-  var gO = Math.max(dv.o[0], dn.o[0]);
-  var gD = Math.max(dv.d[0], dn.d[0]);
-  draw('v-svg', dv, gO, gD, 2);
-  draw('n-svg', dn, gO, gD, null);
+  /* Draw funnels — each on its own scale so shape is always visible */
+  draw('v-svg', dv, dv.o[0], dv.d[0], 2);
+  draw('n-svg', dn, dn.o[0], dn.d[0], null);
 
   drawRevChart();
 }
