@@ -866,7 +866,7 @@
                 <button class="lock-btn active" id="v-lb" onclick="TL()">Locked</button>
               </div>
               <div class="lock-note show" id="v-ln">
-                Lock active — steps 1 &amp; 2 back-solve to honour this cap. Step 4 flows forward from the capped step 3.
+                Lock active — DPs capped at step 3; opps also capped at 4× those DPs. Steps 1 &amp; 2 back-solve accordingly.
               </div>
             </div>
           </div>
@@ -1148,11 +1148,19 @@ function calcVRM() {
   var lk=false;
   if(LK) {
     var cap=vl('v-cap');
+    /* Constraint 1: cap DPs at step 3 */
     if(d[2]>cap) {
       lk=true;
       var d2=cap;
       var d1=c2d>0 ? d2/c2d : d[1];
       d[1]=Math.min(d1,tDP); d[2]=d2; d[3]=d2*c3d;
+    }
+    /* Constraint 2: opps at step 3 must not exceed 4× DPs at step 3 */
+    if(o[2] > 4*d[2]) {
+      lk=true;
+      o[2] = 4*d[2];
+      if(c2o>0 && o[2]/c2o < o[1]) o[1] = o[2]/c2o;
+      o[3] = o[2]*c3o;
     }
   }
   var op=[100, o[1]/o[0]*100, o[2]/o[0]*100, o[3]/o[0]*100];
